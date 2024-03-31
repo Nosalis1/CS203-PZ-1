@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class HelloApplication extends Application {
+public class RecursiveTreeApp extends Application {
     public static final double WINDOW_WIDTH = 800;
     public static final double WINDOW_HEIGHT = 600;
 
@@ -54,10 +54,12 @@ public class HelloApplication extends Application {
         }
 
         public static void DrawAnimated(final Pane pane, double x, double y, double angle, double length, int depth) {
+            animating = true;
             recursionDepth = 0;
             long time = System.currentTimeMillis();
             drawAnimatedRecursive(pane, x, y, angle, length, depth);
             System.out.println("Recursion depth: " + recursionDepth + " Time taken: " + (System.currentTimeMillis() - time) + "ms");
+            animating = false;
         }
 
         private static void drawAnimatedRecursive(final Pane pane, double x, double y, double angle, double length, int depth) {
@@ -87,6 +89,8 @@ public class HelloApplication extends Application {
 
     private int depth = 5;
     private boolean animated = false;
+    protected static boolean animating = false;
+    double positionX, positionY;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -102,6 +106,7 @@ public class HelloApplication extends Application {
             RecursiveTree.Draw(renderPane, WINDOW_WIDTH * 0.5, WINDOW_HEIGHT - RecursiveTree.LENGTH * 0.5, RecursiveTree.TREE_ANGLE, RecursiveTree.LENGTH, 5);
             setOnAction(e -> {
                 try {
+                    if (animating) return;
                     depth = Math.min(RecursiveTree.MAX_DEPTH, Math.max(0, Integer.parseInt(getText()) + 1));
                     renderPane.getChildren().clear();
                     if (animated) {
@@ -124,6 +129,20 @@ public class HelloApplication extends Application {
             setSpacing(10);
             setPadding(new javafx.geometry.Insets(10));
         }});
+
+        renderPane.setOnMousePressed(event -> {
+            positionX = event.getSceneX();
+            positionY = event.getSceneY();
+        });
+
+        renderPane.setOnMouseDragged(event -> {
+            double offsetX = event.getSceneX() - positionX;
+            double offsetY = event.getSceneY() - positionY;
+            renderPane.setTranslateX(renderPane.getTranslateX() + offsetX);
+            renderPane.setTranslateY(renderPane.getTranslateY() + offsetY);
+            positionX = event.getSceneX();
+            positionY = event.getSceneY();
+        });
 
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         stage.setTitle("Recursive Tree");
